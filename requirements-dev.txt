@@ -1,0 +1,4 @@
+# Full local toolkit: JS rendering + tests.  After installing run:  playwright install chromium
+-r requirements.txt
+playwright>=1.49
+pytest>=8.0

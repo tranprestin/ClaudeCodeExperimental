@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Scraper</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1b1f24; --muted: #5f6b7a; --border: #dde2e8;
+    --accent: #2458d6; --accent-text: #ffffff; --accent-soft: #e8eefc; --danger: #b42318;
+    --warn-bg: #fff6e0; --warn-text: #7a4b00; --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111418; --panel: #1a1f25; --text: #e7ebf0; --muted: #9aa6b4; --border: #2c343d;
+      --accent: #6c95ff; --accent-text: #0b1020; --accent-soft: #1d2842; --danger: #ff8a80;
+      --warn-bg: #3a2e12; --warn-text: #ffd98a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; margin: 0 0 12px; }
+  .sub { color: var(--muted); margin: 0 0 22px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+           padding: 18px; margin-bottom: 18px; }
+  .url-row { display: flex; gap: 10px; }
+  .url-row input { flex: 1; font-size: 1rem; padding: 11px 12px; }
+  input, select { font: inherit; color: var(--text); background: var(--bg);
+                  border: 1px solid var(--border); border-radius: 7px; padding: 7px 9px; min-width: 0; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button { font: inherit; border-radius: 7px; border: 1px solid var(--border); background: var(--panel);
+           color: var(--text); padding: 8px 14px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent);
+                   font-weight: 600; padding: 11px 22px; }
+  button:disabled { opacity: .55; cursor: progress; }
+  button.icon { padding: 4px 9px; color: var(--muted); }
+  .opts { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; color: var(--muted); font-size: .9rem; }
+  .opts label { display: flex; align-items: center; gap: 6px; }
+  .opts input { width: 80px; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border-bottom: 1px solid var(--border); padding: 7px 8px; text-align: left; vertical-align: middle; }
+  th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+  #cats td input[type=text] { width: 100%; }
+  #cats td:first-child, #cats th:first-child { width: 40px; text-align: center; }
+  .row-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .hint { color: var(--muted); font-size: .85rem; margin: 10px 0 0; }
+  .summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .chip { background: var(--accent-soft); border-radius: 999px; padding: 4px 12px; font-size: .88rem; }
+  .chip b { font-variant-numeric: tabular-nums; }
+  #results td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #results th.num { text-align: right; }
+  .warn { background: var(--warn-bg); color: var(--warn-text); border-radius: 7px; padding: 8px 12px;
+          margin: 0 0 12px; font-size: .9rem; }
+  .error { color: var(--danger); font-weight: 600; }
+  details { margin-top: 14px; }
+  summary { cursor: pointer; color: var(--muted); }
+  pre { font: 12px/1.45 var(--mono); background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
+        padding: 10px; overflow-x: auto; max-height: 320px; white-space: pre-wrap; }
+  .head-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .hidden { display: none; }
+  @media (max-width: 640px) { .url-row { flex-direction: column; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Data Scraper</h1>
+  <p class="sub">Paste a page URL, choose which categories to extract, and get a clean table you can export as JSON or CSV.</p>
+
+  <section class="panel">
+    <form id="form" class="url-row">
+      <input id="url" type="text" inputmode="url" placeholder="https://example.org/projects" autocomplete="url" required>
+      <button id="go" class="primary" type="submit">Scrape</button>
+    </form>
+    <div class="opts">
+      <label>Rendering
+        <select id="render">
+          <option value="auto">Auto-detect</option>
+          <option value="static">Static HTML</option>
+          <option value="js">JavaScript (browser)</option>
+        </select>
+      </label>
+      <label>Max pages <input id="maxPages" type="number" min="1" max="{{ max_pages_limit }}" value="3"></label>
+      <label>Delay (s) <input id="delay" type="number" min="{{ min_delay }}" step="0.5" value="1.5"></label>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Categories</h2>
+    <div class="table-wrap">
+      <table id="cats">
+        <thead><tr><th>On</th><th>Column name</th><th>Type</th><th>Header / label keywords</th><th>Regex (optional)</th><th>CSS selector (optional)</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="row-actions">
+      <button type="button" id="addCat">+ Add category</button>
+      <button type="button" id="resetCats">Reset to defaults</button>
+    </div>
+    <p class="hint">Types: <b>year</b>, <b>money</b> (normalised to a number plus currency), <b>name</b>, <b>number</b>, <b>text</b>.
+      Keywords match table headers and “Label: value” text. A regex's first group becomes the value, for example <code>from (?:the )?(.+?) in \d{4}</code>.</p>
+  </section>
+
+  <section class="panel hidden" id="out">
+    <div class="head-row">
+      <h2 id="outTitle">Results</h2>
+      <div class="row-actions" style="margin:0">
+        <button type="button" id="dlJson">Download JSON</button>
+        <button type="button" id="dlCsv">Download CSV</button>
+      </div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div id="warnings"></div>
+    <div class="table-wrap"><table id="results"></table></div>
+    <details><summary>Scraper log</summary><pre id="log"></pre></details>
+  </section>
+</main>
+
+<script>
+const TYPES = ["name", "year", "money", "number", "text"];
+const $ = (id) => document.getElementById(id);
+let defaults = [], lastResult = null;
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+function catRow(c) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><input type="checkbox" ${c.enabled !== false ? "checked" : ""} aria-label="enabled"></td>
+    <td><input type="text" value="${esc(c.name)}" aria-label="name"></td>
+    <td><select aria-label="type">${TYPES.map(t => `<option ${t === c.type ? "selected" : ""}>${t}</option>`).join("")}</select></td>
+    <td><input type="text" value="${esc((c.keywords || []).join(", "))}" aria-label="keywords"></td>
+    <td><input type="text" value="${esc(c.pattern || "")}" aria-label="regex" style="font-family:var(--mono)"></td>
+    <td><input type="text" value="${esc(c.selector || "")}" aria-label="selector" style="font-family:var(--mono)"></td>
+    <td><button type="button" class="icon" title="Remove">✕</button></td>`;
+  tr.querySelector("button").onclick = () => { tr.remove(); saveCats(); };
+  tr.addEventListener("input", saveCats);
+  return tr;
+}
+
+function readCats() {
+  return [...document.querySelectorAll("#cats tbody tr")].map(tr => {
+    const [on, name, type, kw, rx, sel] = tr.querySelectorAll("input, select");
+    return { enabled: on.checked, name: name.value.trim(), type: type.value,
+             keywords: kw.value.split(",").map(s => s.trim()).filter(Boolean),
+             pattern: rx.value.trim() || null, selector: sel.value.trim() || null };
+  }).filter(c => c.name);
+}
+
+function setCats(list) {
+  const body = document.querySelector("#cats tbody");
+  body.innerHTML = "";
+  list.forEach(c => body.appendChild(catRow(c)));
+}
+
+function saveCats() { try { localStorage.setItem("scraper.categories", JSON.stringify(readCats())); } catch (e) {} }
+function loadSaved() { try { return JSON.parse(localStorage.getItem("scraper.categories")); } catch (e) { return null; } }
+
+function fmt(v, col) {
+  if (v === null || v === undefined) return '<span style="color:var(--muted)">—</span>';
+  if (typeof v === "number") {
+    return col.type === "year" ? String(v) : v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+  return esc(v);
+}
+
+function renderResult(r) {
+  lastResult = r;
+  const m = r.meta;
+  $("out").classList.remove("hidden");
+  $("outTitle").textContent = `Results — ${m.record_count} record${m.record_count === 1 ? "" : "s"}`;
+  $("summary").innerHTML = [
+    ["Records", m.record_count], ["Pages", m.pages_scraped],
+    ["Engine", m.render_mode === "playwright" ? "Playwright (JS)" : "BeautifulSoup (static)"],
+    ["Time", m.elapsed_seconds + "s"],
+  ].map(([k, v]) => `<span class="chip">${k}: <b>${esc(v)}</b></span>`).join("");
+  $("warnings").innerHTML = (m.warnings || []).map(w => `<p class="warn">${esc(w)}</p>`).join("");
+  const types = Object.fromEntries(m.categories.map(c => [c.name, c.type]));
+  const cols = r.columns.map(name => ({ name, type: types[name] || "text" }));
+  const isNum = c => ["money", "number"].includes(c.type);
+  $("results").innerHTML = r.records.length ? `
+    <thead><tr><th>#</th>${cols.map(c => `<th class="${isNum(c) ? "num" : ""}">${esc(c.name)}</th>`).join("")}</tr></thead>
+    <tbody>${r.records.map((rec, i) => `<tr><td>${i + 1}</td>${cols.map(c =>
+      `<td class="${isNum(c) ? "num" : ""}">${fmt(rec[c.name], c)}</td>`).join("")}</tr>`).join("")}</tbody>` : "";
+  $("log").textContent = (r.log || []).join("\n");
+}
+
+function download(name, text, type) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+$("dlJson").onclick = () => lastResult && download("data.json",
+  JSON.stringify({ meta: lastResult.meta, records: lastResult.records }, null, 2), "application/json");
+$("dlCsv").onclick = () => {
+  if (!lastResult) return;
+  const cols = [...lastResult.columns, "source_url"];
+  const q = v => v === null || v === undefined ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  const csv = [cols.map(q).join(","), ...lastResult.records.map(r => cols.map(c => q(r[c])).join(","))].join("\n");
+  download("data.csv", csv, "text/csv");
+};
+
+$("addCat").onclick = () => { document.querySelector("#cats tbody").appendChild(
+  catRow({ name: "New column", type: "text", keywords: [], enabled: true })); saveCats(); };
+$("resetCats").onclick = () => { setCats(defaults); saveCats(); };
+
+$("form").onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = $("go");
+  btn.disabled = true; btn.textContent = "Scraping…";
+  $("out").classList.remove("hidden");
+  $("outTitle").textContent = "Working…";
+  $("summary").innerHTML = ""; $("warnings").innerHTML = ""; $("results").innerHTML = ""; $("log").textContent = "";
+  try {
+    const res = await fetch("/api/scrape", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: $("url").value, categories: readCats(), render: $("render").value,
+                             max_pages: +$("maxPages").value, delay: +$("delay").value }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      $("outTitle").innerHTML = `<span class="error">${esc(data.error || "Request failed")}</span>`;
+      $("log").textContent = (data.log || []).join("\n");
+    } else {
+      renderResult(data);
+    }
+  } catch (err) {
+    $("outTitle").innerHTML = `<span class="error">Network error: ${esc(err.message)}</span>`;
+  } finally {
+    btn.disabled = false; btn.textContent = "Scrape";
+  }
+};
+
+(async () => {
+  defaults = await (await fetch("/api/categories")).json();
+  setCats(loadSaved() || defaults);
+  const q = new URLSearchParams(location.search).get("url");
+  if (q) $("url").value = q;
+})();
+</script>
+</body>
+</html>

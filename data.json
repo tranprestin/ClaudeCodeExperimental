@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "source_url": "https://pypi.org/sponsors/",
+    "scraped_at": "2026-09-27T21:32:56+00:00",
+    "render_mode": "beautifulsoup",
+    "render_reason": "static HTML looks complete (8347 chars of visible text)",
+    "pages_scraped": 1,
+    "pages": [
+      {
+        "page": 1,
+        "url": "https://pypi.org/sponsors/",
+        "status": 200,
+        "records": 4
+      }
+    ],
+    "record_count": 4,
+    "categories": [
+      {
+        "name": "Project Name",
+        "type": "name",
+        "keywords": [
+          "project",
+          "name",
+          "title",
+          "program",
+          "programme",
+          "initiative",
+          "scheme"
+        ],
+        "pattern": null,
+        "selector": null,
+        "enabled": true
+      },
+      {
+        "name": "Year",
+        "type": "year",
+        "keywords": [
+          "year",
+          "fy",
+          "fiscal",
+          "date",
+          "awarded",
+          "completed",
+          "opened",
+          "start"
+        ],
+        "pattern": null,
+        "selector": null,
+        "enabled": true
+      },
+      {
+        "name": "Monetary Amount",
+        "type": "money",
+        "keywords": [
+          "amount",
+          "cost",
+          "budget",
+          "funding",
+          "value",
+          "price",
+          "award",
+          "grant",
+          "investment",
+          "total",
+          "usd",
+          "$",
+          "€",
+          "£"
+        ],
+        "pattern": null,
+        "selector": null,
+        "enabled": true
+      },
+      {
+        "name": "Funder",
+        "type": "text",
+        "keywords": [
+          "funder"
+        ],
+        "pattern": "from (?:the )?(.+?) in \\d{4}",
+        "selector": null,
+        "enabled": true
+      }
+    ],
+    "elapsed_seconds": 0.37,
+    "warnings": []
+  },
+  "records": [
+    {
+      "Project Name": "The successful relaunch of the Python Package Index, powered by the new 'Warehouse' codebase",
+      "Year": 2018,
+      "Monetary Amount": 170000.0,
+      "Funder": "Mozilla Open Source Support Program",
+      "Currency": "USD",
+      "source_url": "https://pypi.org/sponsors/"
+    },
+    {
+      "Project Name": "Improving PyPI's security and accessibility, and adding support for multiple locales",
+      "Year": 2019,
+      "Monetary Amount": 80000.0,
+      "Funder": "Open Technology Fund",
+      "Currency": "USD",
+      "source_url": "https://pypi.org/sponsors/"
+    },
+    {
+      "Project Name": "Additional security-focused features for PyPI",
+      "Year": 2019,
+      "Monetary Amount": 100000.0,
+      "Funder": "Facebook Research",
+      "Currency": "USD",
+      "source_url": "https://pypi.org/sponsors/"
+    },
+    {
+      "Project Name": "Overhauling pip's user experience and dependency resolver",
+      "Year": 2020,
+      "Monetary Amount": 407000.0,
+      "Funder": "Chan Zuckerberg Initiative and the Mozilla Open Source Support Program",
+      "Currency": "USD",
+      "source_url": "https://pypi.org/sponsors/"
+    }
+  ]
+}

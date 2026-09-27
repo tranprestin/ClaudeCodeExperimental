@@ -1,0 +1,11 @@
+[
+  {"name": "Project Name", "type": "name",
+   "keywords": ["project", "name", "title", "program"]},
+  {"name": "Year", "type": "year",
+   "keywords": ["year", "fy", "fiscal", "date", "awarded"]},
+  {"name": "Monetary Amount", "type": "money",
+   "keywords": ["amount", "cost", "budget", "funding", "value", "grant"]},
+  {"name": "Funder", "type": "text", "keywords": ["funder", "sponsor", "agency"],
+   "pattern": "from (?:the )?(.+?) in \\d{4}"},
+  {"name": "Location", "type": "text", "keywords": ["location", "city", "country"], "enabled": false}
+]

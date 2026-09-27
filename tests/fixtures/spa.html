@@ -1,0 +1,16 @@
+<!doctype html><html><head><title>Projects App</title></head><body>
+<div id="root"></div>
+<script>
+const DATA = [{"title": "Riverside Light Rail Extension", "fy": 2016, "amount": "\u20ac412.5M"}, {"title": "Harbor Bridge Retrofit", "fy": 2017, "amount": "\u20ac88.0M"}, {"title": "Northgate Water Treatment Plant", "fy": 2018, "amount": "\u20ac156.2M"}, {"title": "Solar Schools Initiative", "fy": 2019, "amount": "\u20ac23.4M"}, {"title": "Downtown Transit Hub", "fy": 2020, "amount": "\u20ac610.0M"}, {"title": "Coastal Flood Barrier", "fy": 2021, "amount": "\u20ac1,250.0M"}, {"title": "Rural Broadband Expansion", "fy": 2022, "amount": "\u20ac74.9M"}, {"title": "Central Library Renovation", "fy": 2023, "amount": "\u20ac31.0M"}, {"title": "EV Charging Corridor", "fy": 2024, "amount": "\u20ac45.5M"}];
+let page = 0; const PER = 4;
+function render() {
+  const rows = DATA.slice(page*PER, (page+1)*PER);
+  const last = (page+1)*PER >= DATA.length;
+  document.getElementById('root').innerHTML =
+    '<h1>Project portfolio</h1><ul class="projects">' +
+    rows.map(r => `<li class="project"><strong>${r.title}</strong><br>FY ${r.fy} · Budget ${r.amount}</li>`).join('') +
+    '</ul><button id="next" ' + (last ? 'disabled' : '') + '>Next</button>';
+  document.getElementById('next').onclick = () => { page++; setTimeout(render, 150); };
+}
+setTimeout(render, 300);
+</script></body></html>

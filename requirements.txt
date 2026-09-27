@@ -1,0 +1,5 @@
+# Runtime deps for the web app / serverless deploys (Vercel). Static-HTML scraping only.
+requests>=2.32
+beautifulsoup4>=4.12
+lxml>=5.0
+flask>=3.0
